@@ -1,50 +1,24 @@
-# M0-B1 — Squelette repo (maintenance prédictive · API REST)
+# M0-B1 — Maintenance - Alex
 
-> **Repo template GitHub.** Clique sur **« Use this template »** en haut à
-> droite de cette page → **Create a new repository** → nomme-le
-> `M0-B1-maintenance-<prénom>` sur **ton** compte GitHub personnel.
-> C'est ce nouveau repo que tu cloneras pour travailler.
-
-Brief **M0-B1 « Intégrer un service IA de maintenance prédictive via API REST »**
-— mardi semaine 1, présentiel, **individuel**, 5 h synchrone.
-L'énoncé complet est publié sur **Simplonline**.
+API Fast API permettant de prédire la criticité d'une machine pour la maintenance préventive.
 
 ---
 
-## 🚀 Démarrage (3 commandes)
+## Fonctionnement de l'API
 
-```bash
-# 0. Clone ton repo perso fraîchement créé
-git clone git@github.com:<ton-user>/M0-B1-maintenance-<prenom>.git
-cd M0-B1-maintenance-<prenom>
+L'API exposée permet de: 
+- Vérifier son état via l'endpoint `/health` (GET)
+- Envoyer des caractéristiques machine via l'endpoint `/predict` (POST) pour obtenir une prédiction de criticité.
+- D'obtenir la criticité prédite ainsi que des probabilités associées.
 
-# 1. Environnement virtuel + dépendances
-#    ▸ Option venv (stdlib) :
-python -m venv .venv && source .venv/bin/activate     # Linux/macOS
-# .venv\Scripts\activate                              # Windows
-pip install -r requirements.txt
-#    ▸ Option uv (si tu as suivi le setup avec uv) — un `uv venv` n'embarque
-#      PAS pip, il faut donc `uv pip` :
-# uv venv --python 3.11 && source .venv/bin/activate
-# uv pip install -r requirements.txt
-
-# 2. Lancer l'API (rechargement auto) — dans un terminal
-uvicorn app.main:app --reload
-
-# 3. Lancer les tests — dans un autre terminal
-pytest
-```
-
-À l'étape 2, ouvre <http://localhost:8000/docs> (Swagger auto). L'endpoint
-`/health` doit déjà répondre `{"status": "ok", "model_loaded": true}`.
-Si ces commandes marchent, ton poste est prêt.
+L'API enregistre un journal de logs via Loguru pour chaque requête reçue, est déployable via Docker et est testée via Pytest.
 
 ---
 
 ## 📁 Structure du repo
 
 ```
-M0-B1-maintenance-<prenom>/
+M0-B1-maintenance-Alex/
 ├── app/
 │   ├── __init__.py
 │   ├── main.py             ← FastAPI : /health (✅) + /predict (à compléter)
@@ -52,6 +26,8 @@ M0-B1-maintenance-<prenom>/
 ├── data/
 │   ├── generate_dataset.py ← régénération du dataset (déjà exécuté)
 │   └── maintenance_data.csv ← dataset synthétique 6 500 lignes
+├── logs/
+│   ├── api.log             ← logs de l'API 
 ├── model/
 │   ├── train_baseline.py   ← entraînement (déjà exécuté)
 │   └── model.joblib        ← modèle pré-entraîné ~6,6 Mo (chargé au démarrage)
@@ -73,80 +49,47 @@ M0-B1-maintenance-<prenom>/
 
 ---
 
-## ✏️ Ce que tu dois compléter
+## ✏️ Prérequis
 
-| Fichier | Tâche |
-|---|---|
-| `app/main.py` | Implémenter l'endpoint **POST `/predict`** (TODO marqué dans le code) |
-| `app/main.py` | Ajouter du **logging Loguru** sur chaque requête (entrée, sortie, durée) |
-| `tests/` | Ajouter **≥ 3 tests** pour `/predict` (cas valide + erreur 422) |
-| `Dockerfile` | Compléter le squelette commenté (image qui build) |
-| `README.md` | Documenter le lancement du service (un dev externe en 5 min) |
+- Python 3.11+
+- pip (ou pip3)
+- virtualenv (ou venv)
+- Docker (optionnel, pour la conteneurisation)
+- `uvicorn` (installé via `pip install -r requirements.txt`)
 
----
-
-## 🧭 Démarche attendue (ordre suggéré)
-
-| # | Étape | Mini-cours | Durée |
-|---|---|---|---|
-| 1 | Prise en main du squelette (clone + install + run) | — | 30 min |
-| 2 | Analyse de l'existant (`main.py`, `schemas.py`, `train_baseline.py`) | — | 30 min |
-| 3 | Implémenter `/predict` | [`01_FastAPI_essentiel.md`](./ressources/01_FastAPI_essentiel.md) | 1 h 30 |
-| 4 | Logging Loguru | [`03_Loguru_essentiel.md`](./ressources/03_Loguru_essentiel.md) | 30 min |
-| 5 | Tests pytest `/predict` | [`04_Pytest_API_essentiel.md`](./ressources/04_Pytest_API_essentiel.md) | 45 min |
-| 6 | Conteneurisation Docker | [`02_Docker_essentiel.md`](./ressources/02_Docker_essentiel.md) | 45 min |
-| 7 | README + push final | — | 30 min |
-
-Cf. [`./ressources/README.md`](./ressources/README.md) pour le détail. Les
-mini-cours se lisent **au moment où tu en as besoin** (~15 min chacun).
 
 ---
 
-## 🎯 Ce qui compte vraiment
+## 🧭 Installation et lancement
 
-1. **Une API qui tourne**, pas une API parfaite. Un `/predict` simple qui
-   fonctionne vaut mieux qu'une archi sur-engineered qui plante.
-2. **Des tests qui passent** : ≥ 3 tests pour `/predict` en PASSED.
-3. **Un README** qui permet à un collègue de lancer le service en 5 minutes.
-4. **Un Dockerfile qui build**, même non optimisé.
+1. Cloner le repo : `git clone <url> && cd M0-B1-maintenance-Alex`
+2. Créer un environnement virtuel : `python -m venv .venv`
+3. Activer l'environnement virtuel :
+4. - Sur Linux/macOS : `source .venv/bin/activate`
+   - Sur Windows : `.venv\Scripts\activate`
+5. Installer les dépendances : `pip install -r requirements.txt`
+6. Lancer le service : `uvicorn app.main:app --reload`
+7. L'API est alors disponible sur `http://localhost:8000` et la documentation sur `http://localhost:8000/docs`.
 
-→ Compétence visée : **C6 — imiter** (intégrer un modèle livré dans un service API).
+(Optionnel)
+1. Construire l'image Docker : `docker build -t maintenance-api .`
+2. Lancer le conteneur : `docker run -p 8000:8000 maintenance-api`
+3. L'API est alors disponible sur `http://localhost:8000` et la documentation sur `http://localhost:8000/docs`.
+
+
 
 ---
 
-## 🔁 Régénérer dataset / modèle (optionnel)
+## 🎯 Test
 
-Le dataset et le modèle sont déjà fournis — **pas besoin** de les régénérer.
-Si tu veux le faire (déterministe, `random_state=42`) :
+Pour lancer les tests unitaires, exécuter la commande suivante dans le terminal :
 
 ```bash
-python data/generate_dataset.py     # régénère le CSV
-python model/train_baseline.py      # réentraîne le modèle (~30 s)
+pytest -q --disable-warnings  
 ```
 
 ---
 
-## ✅ Conventions de code
+## 📝 Misc.
 
-- Python 3.11+
-- Type hints sur toutes les signatures publiques
-- Pas de `print` — utiliser **Loguru**
-- `pathlib.Path` pour les chemins (pas de `os.path`)
-- `random_state=42` partout où il y a de l'aléa
-
----
-
-## 🆘 Bloqué·e ?
-
-| Symptôme | Cause probable | Solution |
-|---|---|---|
-| `No module named pip` à l'install | env créé avec `uv venv` (n'embarque pas pip) | utiliser `uv pip install -r requirements.txt` (et non `pip install`) |
-| `ModuleNotFoundError` au lancement | env virtuel pas activé / deps absentes | `source .venv/bin/activate` puis `pip install -r requirements.txt` (ou `uv pip install …`) |
-| `Modèle introuvable` au démarrage uvicorn | `model.joblib` absent ou mal placé | `python model/train_baseline.py` |
-| `pytest` échoue au clone | env virtuel actif ? deps installées ? | idem ligne 1 |
-| Port 8000 déjà utilisé | un autre service tourne dessus | `uvicorn app.main:app --reload --port 8001` |
-
-1. Relis l'**exercice guidé** du mini-cours concerné (chacun a sa solution).
-2. Ouvre **Swagger** (`/docs`) pour débugger une route sans curl.
-3. Lis les **logs Loguru** dans la console pour repérer les exceptions.
-4. **Demande en direct mardi** — tu es en présentiel, profites-en.
+Le Dockerfile inclut un Healthcheck pour vérifier l'état de l'API qui interroge l'endpoint `/health` toutes les 30 secondes.
