@@ -20,6 +20,8 @@ from pathlib import Path
 from typing import Any
 
 import joblib
+import time
+import pandas as pd
 from fastapi import FastAPI, HTTPException
 from loguru import logger
 
@@ -29,6 +31,13 @@ MODEL_PATH = Path(__file__).resolve().parents[1] / "model" / "model.joblib"
 
 # Mémoire d'application — peuplée par le lifespan
 state: dict[str, Any] = {}
+logger.add(
+    "logs/api.log",
+    rotation="5 MB",
+    retention="7 days",
+    compression="zip",
+    level="INFO",
+)
 
 
 @asynccontextmanager
@@ -104,10 +113,20 @@ def predict(item: MachineInput) -> PredictionResponse:
     Returns:
         PredictionResponse avec la classe prédite et les probabilités.
     """
-    raise HTTPException(
-        status_code=501,
-        detail=(
-            "Endpoint /predict à implémenter — voir TODO dans app/main.py "
-            "et le mini-cours 01_FastAPI_essentiel.md."
-        ),
+    start_time = time.perf_counter()
+    logger.info(f"Entrée /predict : {item}")
+
+    df = pd.DataFrame([item.model_dump()])
+    model = state["model"]
+    prediction = model.predict(df)[0]
+    proba = model.predict_proba(df)[0]
+    probabilities = dict(zip(model.classes_, proba))
+    prediction_response = PredictionResponse(
+        criticite=prediction,
+        probabilites=probabilities,
     )
+    logger.info(f"Sortie /predict : {prediction_response}")
+    duration_ms = (time.perf_counter() - start_time) * 1000
+    logger.info(f"Durée /predict : {duration_ms:.2f} ms")
+    return prediction_response
+
